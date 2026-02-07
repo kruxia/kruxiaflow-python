@@ -21,7 +21,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync --extra dev
 
       - name: Check formatting
         run: uv run ruff format --check
@@ -29,7 +29,7 @@ jobs:
       - name: Lint
         run: uv run ruff check
 
-      - name: Type chekc
+      - name: Type check
         run: uv run ty check
 
   test:
@@ -51,7 +51,7 @@ jobs:
           allow-prereleases: true
 
       - name: Install dependencies
-        run: uv sync --dev --python ${{ matrix.python-version }}
+        run: uv sync --extra dev --python ${{ matrix.python-version }}
 
       - name: Run tests
         run: uv run pytest
