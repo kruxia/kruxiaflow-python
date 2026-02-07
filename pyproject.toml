@@ -3,14 +3,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "kruxiaflow"
-version = "0.1.0"
+name = "kruxiaflow-python"
+version = "0.3.0"
 description = "Python SDK for Kruxia Flow workflow orchestration"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 authors = [
-    { name = "Kruxia", email = "dev@kruxia.com" }
+    { name = "Kruxia", email = "sah@kruxia.com" }
 ]
 keywords = ["workflow", "orchestration", "dag", "pipeline", "kruxiaflow"]
 classifiers = [
@@ -22,6 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
@@ -71,9 +72,9 @@ std = [
 kruxiaflow-worker = "kruxiaflow.workers.__main__:main"
 
 [project.urls]
-Homepage = "https://github.com/kruxia/kruxiaflow"
+Homepage = "https://github.com/kruxia/kruxiaflow-python"
 Documentation = "https://kruxiaflow.dev/docs/python-sdk"
-Repository = "https://github.com/kruxia/kruxiaflow"
+Repository = "https://github.com/kruxia/kruxiaflow-python"
 
 [tool.hatch.build.targets.wheel]
 packages = ["kruxiaflow"]

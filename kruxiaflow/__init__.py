@@ -126,7 +126,7 @@ from .models import (
 )
 
 try:
-    __version__ = version("kruxiaflow")
+    __version__ = version("kruxiaflow-python")
 except PackageNotFoundError:
     __version__ = "0.0.0"
 

@@ -5,7 +5,7 @@ Python SDK for Kruxia Flow workflow orchestration.
 ## Installation
 
 ```bash
-pip install kruxiaflow
+pip install kruxiaflow-python
 ```
 
 ## Quick Start
