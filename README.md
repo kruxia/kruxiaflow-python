@@ -1,6 +1,6 @@
 # Kruxia Flow Python SDK
 
-[![CI](https://github.com/kruxia/kruxiaflow/actions/workflows/main-ci.yml/badge.svg)](https://github.com/kruxia/kruxiaflow-python/actions/workflows/main-ci.yml)
+[![CI](https://github.com/kruxia/kruxiaflow-python/actions/workflows/ci.yml/badge.svg)](https://github.com/kruxia/kruxiaflow-python/actions/workflows/ci.yml)
 [![Docker Image](https://img.shields.io/docker/image-size/kruxia/kruxiaflow-py-std/latest?label=docker%20image)](https://hub.docker.com/r/kruxia/kruxiaflow-py-std)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Discord](https://img.shields.io/discord/1457098705214640333?logo=discord&label=Discord)](https://discord.gg/ZJAzygCq)
