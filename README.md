@@ -9,14 +9,16 @@ Define workflows in Python, deploy them to the Kruxia Flow server, and build cus
 
 ## Installation
 
+The Python SDK is not yet published to PyPI. Install directly from GitHub:
+
 ```bash
-pip install kruxiaflow-python
+pip install git+https://github.com/kruxia/kruxiaflow-python.git
 ```
 
 For the standard Python worker with data science packages:
 
 ```bash
-pip install "kruxiaflow-python[std]"
+pip install "kruxiaflow-python[std] @ git+https://github.com/kruxia/kruxiaflow-python.git"
 ```
 
 ## Quick Start
