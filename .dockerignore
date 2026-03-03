@@ -1,0 +1,14 @@
+.venv/
+.git/
+__pycache__/
+tests/
+examples/
+docs/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+coverage.xml
+*.log
+uv.lock
+.DS_Store
+LICENSE

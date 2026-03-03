@@ -16,7 +16,7 @@ The standard Python worker (`py-std`) provides a ready-to-use Docker image with 
 
 | Worker | Image | Size (raw/compressed) | Coverage |
 |--------|-------|----------------------|----------|
-| `py-std` | `kruxia/kruxiaflow-py-std` | 1.25GB / 320-350MB | Data engineering, ML, NLP |
+| `py-std` | `kruxia/kruxiaflow-py-std` | ~2.3 GB / ~500 MB | Data engineering, ML, NLP |
 
 ## Pre-installed Packages
 
@@ -56,7 +56,7 @@ tiktoken>=0.6               # Token counting for LLMs
 
 The `py-std` worker covers 80-90% of use cases. For specialized needs, the community can contribute custom worker definitions:
 
-- **PyTorch Training**: Add `torch>=2.2` for deep learning model training
+- **PyTorch Training**: The standard worker includes CPU-only PyTorch; for GPU training, build a custom worker with CUDA-enabled `torch`
 - **Spacy NER**: Add `spacy>=3.7` with language models for advanced NLP
 - **Scientific Computing**: Add `scipy>=1.12` for specialized algorithms
 - **Geospatial**: Add `geopandas`, `shapely` for GIS processing
@@ -432,7 +432,7 @@ Use the `py-std` worker for:
 - Prototyping and quick iterations
 
 Build [custom workers](custom-workers.md) when you need:
-- PyTorch for deep learning training
+- GPU-enabled PyTorch for deep learning training
 - Spacy for advanced NER
 - Custom or proprietary packages
 - Type-safe parameters with validation
