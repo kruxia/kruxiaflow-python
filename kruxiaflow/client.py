@@ -401,6 +401,107 @@ class AsyncKruxiaFlow:
         except httpx.RequestError as e:
             raise KruxiaFlowError(f"Request failed: {e}") from e
 
+    async def start_workflow(
+        self,
+        workflow_name: str,
+        *,
+        inputs: dict[str, Any] | None = None,
+        version: str | None = None,
+    ) -> dict[str, Any]:
+        """Start a workflow execution by name.
+
+        Args:
+            workflow_name: Name of the workflow to start
+            inputs: Input parameters for the workflow
+            version: Optional version (default: latest)
+
+        Returns:
+            Response containing workflow instance ID and status
+        """
+        body: dict[str, Any] = {"name": workflow_name}
+        if inputs:
+            body["inputs"] = inputs
+        if version:
+            body["version"] = version
+
+        try:
+            response = await self._client.post("/api/v1/workflows/start", json=body)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 401:
+                raise AuthenticationError("Authentication failed") from e
+            if e.response.status_code == 404:
+                raise WorkflowNotFoundError(
+                    f"Workflow '{workflow_name}' not found"
+                ) from e
+            raise KruxiaFlowError(
+                f"Failed to start workflow: {e.response.status_code} - {e.response.text}"
+            ) from e
+        except httpx.RequestError as e:
+            raise KruxiaFlowError(f"Request failed: {e}") from e
+
+    async def get_workflow_output(self, workflow_id: str) -> dict[str, Any]:
+        """Get workflow output.
+
+        Returns all activity outputs for a completed workflow.
+
+        Args:
+            workflow_id: Unique workflow execution ID
+
+        Returns:
+            Dictionary of activity outputs
+        """
+        try:
+            response = await self._client.get(
+                f"/api/v1/workflows/{workflow_id}/output"
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 401:
+                raise AuthenticationError("Authentication failed") from e
+            if e.response.status_code == 404:
+                raise WorkflowNotFoundError(
+                    f"Workflow '{workflow_id}' not found"
+                ) from e
+            raise KruxiaFlowError(
+                f"Failed to get workflow output: {e.response.status_code} - {e.response.text}"
+            ) from e
+        except httpx.RequestError as e:
+            raise KruxiaFlowError(f"Request failed: {e}") from e
+
+    async def get_activity_output(
+        self, workflow_id: str, activity_key: str
+    ) -> dict[str, Any]:
+        """Get output for a specific activity.
+
+        Args:
+            workflow_id: Unique workflow execution ID
+            activity_key: Activity key within the workflow
+
+        Returns:
+            Activity output data
+        """
+        try:
+            response = await self._client.get(
+                f"/api/v1/workflows/{workflow_id}/activities/{activity_key}/output"
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 401:
+                raise AuthenticationError("Authentication failed") from e
+            if e.response.status_code == 404:
+                raise WorkflowNotFoundError(
+                    f"Workflow '{workflow_id}' or activity '{activity_key}' not found"
+                ) from e
+            raise KruxiaFlowError(
+                f"Failed to get activity output: {e.response.status_code} - {e.response.text}"
+            ) from e
+        except httpx.RequestError as e:
+            raise KruxiaFlowError(f"Request failed: {e}") from e
+
     async def cancel_workflow(self, workflow_id: str) -> None:
         """Cancel a running workflow.
 
