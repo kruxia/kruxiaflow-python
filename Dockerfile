@@ -59,3 +59,20 @@ COPY --from=builder /app /app
 
 ENV WORKER_TYPE=py-std
 CMD ["kruxiaflow-worker"]
+
+FROM runtime AS py-sys
+
+# Install common CLI tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install only the base kruxiaflow-python package (no [std] extras)
+COPY pyproject.toml README.md ./
+COPY kruxiaflow/ ./kruxiaflow/
+RUN pip install --no-cache-dir .
+
+ENV WORKER_TYPE=py-sys
+USER nobody
+CMD ["kruxiaflow-worker"]
