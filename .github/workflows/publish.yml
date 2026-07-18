@@ -16,7 +16,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Full history + tags: the package version is derived from the git tag
+      # by hatch-vcs, so the build must be able to see it.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5

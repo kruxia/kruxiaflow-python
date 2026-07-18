@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Package version is now derived from the git tag via `hatch-vcs`;
+  `pyproject.toml` no longer contains a version field, making tag–package
+  drift (as in 0.4.1) structurally impossible. Cutting a release is now just
+  publishing a GitHub Release — no version-bump commit required.
+
+## [0.4.1] - 2026-07-17
+
+Docker-only release: first successful automated `kruxia/kruxiaflow-py-std`
+image publish (`0.4.1`, `0.4`, `latest`) after Docker Hub credentials were
+configured. Package contents are identical to 0.4.0 — `pyproject.toml` was not
+bumped, so no new PyPI upload occurred (PyPI remains at 0.4.0).
+
 ## [0.4.0] - 2026-07-17
 
 First PyPI release.

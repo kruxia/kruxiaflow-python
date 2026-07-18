@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
 name = "kruxiaflow"
-version = "0.4.0"
+dynamic = ["version"]
 description = "Python SDK for Kruxia Flow workflow orchestration"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -75,6 +75,16 @@ kruxiaflow-worker = "kruxiaflow.workers.__main__:main"
 Homepage = "https://github.com/kruxia/kruxiaflow-python"
 Documentation = "https://kruxiaflow.dev/docs/python-sdk"
 Repository = "https://github.com/kruxia/kruxiaflow-python"
+
+# Version is derived from git tags (tag v0.4.2 -> package 0.4.2); between tags
+# builds get a .devN+hash version. No version field exists in this file — the
+# release tag is the single source of truth, so tag/package drift is impossible.
+# fallback covers shallow CI clones that lack tag history (lint/test jobs).
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+fallback_version = "0.0.0.dev0"
 
 [tool.hatch.build.targets.wheel]
 packages = ["kruxiaflow"]
