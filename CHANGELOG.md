@@ -21,6 +21,9 @@ First PyPI release.
 
 ### Added
 
+- Release automation: the `kruxia/kruxiaflow-py-std` worker image is now built and
+  pushed automatically on each release, version-tagged to match the SDK
+  (amd64; arm64 deferred).
 - `CHANGELOG.md` (this file).
 
 ## [0.3.0] - 2026
