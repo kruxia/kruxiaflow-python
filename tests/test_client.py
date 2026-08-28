@@ -992,3 +992,277 @@ class TestAsyncKruxiaFlowCancelWorkflow:
         ) as client:
             with pytest.raises(KruxiaFlowError, match="Request failed"):
                 await client.cancel_workflow("wf-123")
+
+
+@pytest.mark.usefixtures("clean_env")
+class TestAsyncKruxiaFlowStartWorkflow:
+    """Test AsyncKruxiaFlow start_workflow method."""
+
+    @pytest.mark.asyncio
+    async def test_start_workflow_success(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="POST",
+            url="http://localhost:8080/api/v1/workflows/start",
+            json={"instance_id": "inst-123", "status": "running"},
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            result = await client.start_workflow("my_workflow")
+
+        assert result["instance_id"] == "inst-123"
+
+    @pytest.mark.asyncio
+    async def test_start_workflow_with_inputs(self, httpx_mock: HTTPXMock):
+        import json
+
+        httpx_mock.add_response(
+            method="POST",
+            url="http://localhost:8080/api/v1/workflows/start",
+            json={"instance_id": "inst-456"},
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            result = await client.start_workflow(
+                "my_workflow",
+                inputs={"param1": "value1"},
+                version="2.0.0",
+            )
+
+        assert result["instance_id"] == "inst-456"
+
+        request = httpx_mock.get_request()
+        body = json.loads(request.content)
+        assert body["name"] == "my_workflow"
+        assert body["inputs"] == {"param1": "value1"}
+        assert body["version"] == "2.0.0"
+
+    @pytest.mark.asyncio
+    async def test_start_workflow_not_found(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="POST",
+            url="http://localhost:8080/api/v1/workflows/start",
+            status_code=404,
+            text="Not found",
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            with pytest.raises(WorkflowNotFoundError, match="not found"):
+                await client.start_workflow("nonexistent")
+
+    @pytest.mark.asyncio
+    async def test_start_workflow_auth_error(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="POST",
+            url="http://localhost:8080/api/v1/workflows/start",
+            status_code=401,
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            with pytest.raises(AuthenticationError):
+                await client.start_workflow("my_workflow")
+
+    @pytest.mark.asyncio
+    async def test_start_workflow_server_error(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="POST",
+            url="http://localhost:8080/api/v1/workflows/start",
+            status_code=500,
+            text="Internal server error",
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            with pytest.raises(KruxiaFlowError, match="Failed to start workflow"):
+                await client.start_workflow("my_workflow")
+
+    @pytest.mark.asyncio
+    async def test_start_workflow_network_error(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_exception(
+            httpx.ConnectError("Connection refused"),
+            url="http://localhost:8080/api/v1/workflows/start",
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            with pytest.raises(KruxiaFlowError, match="Request failed"):
+                await client.start_workflow("my_workflow")
+
+
+@pytest.mark.usefixtures("clean_env")
+class TestAsyncKruxiaFlowGetWorkflowOutput:
+    """Test AsyncKruxiaFlow get_workflow_output method."""
+
+    @pytest.mark.asyncio
+    async def test_get_workflow_output_success(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123/output",
+            json={"step1": {"result": "done"}, "step2": {"count": 42}},
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            result = await client.get_workflow_output("wf-123")
+
+        assert result["step1"]["result"] == "done"
+        assert result["step2"]["count"] == 42
+
+    @pytest.mark.asyncio
+    async def test_get_workflow_output_not_found(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/nonexistent/output",
+            status_code=404,
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            with pytest.raises(WorkflowNotFoundError):
+                await client.get_workflow_output("nonexistent")
+
+    @pytest.mark.asyncio
+    async def test_get_workflow_output_auth_error(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123/output",
+            status_code=401,
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            with pytest.raises(AuthenticationError):
+                await client.get_workflow_output("wf-123")
+
+    @pytest.mark.asyncio
+    async def test_get_workflow_output_server_error(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123/output",
+            status_code=500,
+            text="Internal server error",
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            with pytest.raises(KruxiaFlowError, match="Failed to get workflow output"):
+                await client.get_workflow_output("wf-123")
+
+    @pytest.mark.asyncio
+    async def test_get_workflow_output_network_error(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_exception(
+            httpx.ConnectError("Connection refused"),
+            url="http://localhost:8080/api/v1/workflows/wf-123/output",
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            with pytest.raises(KruxiaFlowError, match="Request failed"):
+                await client.get_workflow_output("wf-123")
+
+
+@pytest.mark.usefixtures("clean_env")
+class TestAsyncKruxiaFlowGetActivityOutput:
+    """Test AsyncKruxiaFlow get_activity_output method."""
+
+    @pytest.mark.asyncio
+    async def test_get_activity_output_success(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123/activities/step1/output",
+            json={"result": "success", "data": [1, 2, 3]},
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            result = await client.get_activity_output("wf-123", "step1")
+
+        assert result["result"] == "success"
+        assert result["data"] == [1, 2, 3]
+
+    @pytest.mark.asyncio
+    async def test_get_activity_output_not_found(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123/activities/missing/output",
+            status_code=404,
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            with pytest.raises(WorkflowNotFoundError, match="activity 'missing' not found"):
+                await client.get_activity_output("wf-123", "missing")
+
+    @pytest.mark.asyncio
+    async def test_get_activity_output_auth_error(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123/activities/step1/output",
+            status_code=401,
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            with pytest.raises(AuthenticationError):
+                await client.get_activity_output("wf-123", "step1")
+
+    @pytest.mark.asyncio
+    async def test_get_activity_output_server_error(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123/activities/step1/output",
+            status_code=500,
+            text="Internal server error",
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            with pytest.raises(KruxiaFlowError, match="Failed to get activity output"):
+                await client.get_activity_output("wf-123", "step1")
+
+    @pytest.mark.asyncio
+    async def test_get_activity_output_network_error(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_exception(
+            httpx.ConnectError("Connection refused"),
+            url="http://localhost:8080/api/v1/workflows/wf-123/activities/step1/output",
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080",
+            api_token="token",
+        ) as client:
+            with pytest.raises(KruxiaFlowError, match="Request failed"):
+                await client.get_activity_output("wf-123", "step1")
