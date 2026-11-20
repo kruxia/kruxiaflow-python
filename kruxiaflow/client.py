@@ -1,7 +1,7 @@
 """API client for Kruxia Flow server."""
 
 import os
-from typing import Any
+from typing import Any, NoReturn
 
 import httpx
 
@@ -232,7 +232,7 @@ class KruxiaFlow:
         except httpx.RequestError as e:
             raise KruxiaFlowError(f"Request failed: {e}") from e
 
-    def cancel_workflow(self, workflow_id: str) -> None:
+    def cancel_workflow(self, workflow_id: str) -> NoReturn:
         """Cancel a running workflow. Not available yet.
 
         The Kruxia Flow server has no cancel operation, so this raises without
@@ -401,7 +401,7 @@ class AsyncKruxiaFlow:
         except httpx.RequestError as e:
             raise KruxiaFlowError(f"Request failed: {e}") from e
 
-    async def cancel_workflow(self, workflow_id: str) -> None:
+    async def cancel_workflow(self, workflow_id: str) -> NoReturn:
         """Cancel a running workflow. Not available yet.
 
         The Kruxia Flow server has no cancel operation, so this raises without
