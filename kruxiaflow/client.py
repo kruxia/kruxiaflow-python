@@ -7,23 +7,6 @@ import httpx
 
 from .models import Workflow
 
-
-class KruxiaFlowError(Exception):
-    """Base exception for Kruxia Flow client errors."""
-
-
-class AuthenticationError(KruxiaFlowError):
-    """Authentication failed."""
-
-
-class DeploymentError(KruxiaFlowError):
-    """Workflow deployment failed."""
-
-
-class WorkflowNotFoundError(KruxiaFlowError):
-    """Workflow not found."""
-
-
 _NO_TOKEN_MESSAGE = (
     "Authentication failed: no API token was set. Pass api_token or set the "
     "KRUXIAFLOW_TOKEN environment variable."
@@ -54,6 +37,22 @@ def _raise_no_token(response: httpx.Response) -> None:
 async def _araise_no_token(response: httpx.Response) -> None:
     """Async response hook for a client with no token: explain a 401."""
     _raise_no_token(response)
+
+
+class KruxiaFlowError(Exception):
+    """Base exception for Kruxia Flow client errors."""
+
+
+class AuthenticationError(KruxiaFlowError):
+    """Authentication failed."""
+
+
+class DeploymentError(KruxiaFlowError):
+    """Workflow deployment failed."""
+
+
+class WorkflowNotFoundError(KruxiaFlowError):
+    """Workflow not found."""
 
 
 class KruxiaFlow:
