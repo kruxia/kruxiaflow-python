@@ -68,6 +68,7 @@ from .client import (
     DeploymentError,
     KruxiaFlow,
     KruxiaFlowError,
+    UnsupportedOperationError,
     WorkflowNotFoundError,
 )
 from .expressions import (
@@ -171,6 +172,7 @@ __all__ = [
     "RetrySettings",
     "ScriptActivity",
     "SecretRef",
+    "UnsupportedOperationError",
     "Workflow",
     "WorkflowNotFoundError",
     "WorkflowRef",

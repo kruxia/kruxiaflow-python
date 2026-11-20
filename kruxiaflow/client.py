@@ -24,6 +24,17 @@ class WorkflowNotFoundError(KruxiaFlowError):
     """Workflow not found."""
 
 
+class UnsupportedOperationError(KruxiaFlowError):
+    """The Kruxia Flow server has no operation for this request."""
+
+
+def _cancel_unsupported(workflow_id: str) -> UnsupportedOperationError:
+    return UnsupportedOperationError(
+        f"Can't cancel workflow '{workflow_id}': the Kruxia Flow server has no "
+        "cancel operation yet, so no request was sent."
+    )
+
+
 class KruxiaFlow:
     """API client for Kruxia Flow server.
 
@@ -222,30 +233,19 @@ class KruxiaFlow:
             raise KruxiaFlowError(f"Request failed: {e}") from e
 
     def cancel_workflow(self, workflow_id: str) -> None:
-        """Cancel a running workflow.
+        """Cancel a running workflow. Not available yet.
+
+        The Kruxia Flow server has no cancel operation, so this raises without
+        sending a request. It stays so that existing code fails with a clear
+        message rather than an ``AttributeError``.
 
         Args:
             workflow_id: Unique workflow execution ID
 
         Raises:
-            WorkflowNotFoundError: If workflow not found
-            KruxiaFlowError: If cancellation fails
+            UnsupportedOperationError: Always, until the server can cancel
         """
-        try:
-            response = self._client.post(f"/api/v1/workflows/{workflow_id}/cancel")
-            response.raise_for_status()
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 401:
-                raise AuthenticationError("Authentication failed") from e
-            if e.response.status_code == 404:
-                raise WorkflowNotFoundError(
-                    f"Workflow '{workflow_id}' not found"
-                ) from e
-            raise KruxiaFlowError(
-                f"Failed to cancel workflow: {e.response.status_code} - {e.response.text}"
-            ) from e
-        except httpx.RequestError as e:
-            raise KruxiaFlowError(f"Request failed: {e}") from e
+        raise _cancel_unsupported(workflow_id)
 
     def get_activity_output(
         self, workflow_id: str, activity_key: str
@@ -402,28 +402,18 @@ class AsyncKruxiaFlow:
             raise KruxiaFlowError(f"Request failed: {e}") from e
 
     async def cancel_workflow(self, workflow_id: str) -> None:
-        """Cancel a running workflow.
+        """Cancel a running workflow. Not available yet.
+
+        The Kruxia Flow server has no cancel operation, so this raises without
+        sending a request.
 
         Args:
             workflow_id: Unique workflow execution ID
+
+        Raises:
+            UnsupportedOperationError: Always, until the server can cancel
         """
-        try:
-            response = await self._client.post(
-                f"/api/v1/workflows/{workflow_id}/cancel"
-            )
-            response.raise_for_status()
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 401:
-                raise AuthenticationError("Authentication failed") from e
-            if e.response.status_code == 404:
-                raise WorkflowNotFoundError(
-                    f"Workflow '{workflow_id}' not found"
-                ) from e
-            raise KruxiaFlowError(
-                f"Failed to cancel workflow: {e.response.status_code} - {e.response.text}"
-            ) from e
-        except httpx.RequestError as e:
-            raise KruxiaFlowError(f"Request failed: {e}") from e
+        raise _cancel_unsupported(workflow_id)
 
     async def close(self) -> None:
         """Close the client connection."""

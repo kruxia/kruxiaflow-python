@@ -363,9 +363,9 @@ status = client.get_workflow(instance["workflow_id"])
 # Get output
 output = client.get_workflow_output(instance["workflow_id"])
 
-# Cancel
-client.cancel_workflow(instance["workflow_id"])
 ```
+
+`cancel_workflow` raises `UnsupportedOperationError`: the Kruxia Flow server has no cancel operation yet.
 
 ### Async Client
 

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`cancel_workflow` no longer reports a workflow as missing** (#2). The
+  server has no cancel operation, so the call always failed with a 404 that the
+  client reported as `WorkflowNotFoundError`. Both clients now raise the new
+  `UnsupportedOperationError` without sending a request.
+
 ### Changed
 
 - Package version is now derived from the git tag via `hatch-vcs`;

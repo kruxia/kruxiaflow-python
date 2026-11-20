@@ -13,6 +13,7 @@ from kruxiaflow.client import (
     DeploymentError,
     KruxiaFlow,
     KruxiaFlowError,
+    UnsupportedOperationError,
     WorkflowNotFoundError,
 )
 
@@ -534,84 +535,23 @@ class TestKruxiaFlowGetWorkflowOutput:
 
 @pytest.mark.usefixtures("clean_env")
 class TestKruxiaFlowCancelWorkflow:
-    """Test KruxiaFlow cancel_workflow method."""
+    """cancel_workflow: the server has no cancel operation yet."""
 
-    def test_cancel_workflow_success(self, httpx_mock: HTTPXMock):
-        httpx_mock.add_response(
-            method="POST",
-            url="http://localhost:8080/api/v1/workflows/wf-123/cancel",
-            status_code=200,
-        )
-
-        with KruxiaFlow(
-            api_url="http://localhost:8080",
-            api_token="token",
-        ) as client:
-            client.cancel_workflow("wf-123")  # Should not raise
-
-    def test_cancel_workflow_not_found(self, httpx_mock: HTTPXMock):
-        httpx_mock.add_response(
-            method="POST",
-            url="http://localhost:8080/api/v1/workflows/nonexistent/cancel",
-            status_code=404,
-        )
-
+    def test_cancel_workflow_raises_without_a_request(self, httpx_mock: HTTPXMock):
+        # httpx_mock fails the test if any request is sent
         with (
             KruxiaFlow(
                 api_url="http://localhost:8080",
                 api_token="token",
             ) as client,
-            pytest.raises(WorkflowNotFoundError),
-        ):
-            client.cancel_workflow("nonexistent")
-
-    def test_cancel_workflow_auth_error(self, httpx_mock: HTTPXMock):
-        httpx_mock.add_response(
-            method="POST",
-            url="http://localhost:8080/api/v1/workflows/wf-123/cancel",
-            status_code=401,
-        )
-
-        with (
-            KruxiaFlow(
-                api_url="http://localhost:8080",
-                api_token="token",
-            ) as client,
-            pytest.raises(AuthenticationError),
+            pytest.raises(UnsupportedOperationError, match="no cancel operation"),
         ):
             client.cancel_workflow("wf-123")
+        assert httpx_mock.get_requests() == []
 
-    def test_cancel_workflow_server_error(self, httpx_mock: HTTPXMock):
-        httpx_mock.add_response(
-            method="POST",
-            url="http://localhost:8080/api/v1/workflows/wf-123/cancel",
-            status_code=500,
-            text="Internal server error",
-        )
-
-        with (
-            KruxiaFlow(
-                api_url="http://localhost:8080",
-                api_token="token",
-            ) as client,
-            pytest.raises(KruxiaFlowError, match="Failed to cancel workflow"),
-        ):
-            client.cancel_workflow("wf-123")
-
-    def test_cancel_workflow_network_error(self, httpx_mock: HTTPXMock):
-        httpx_mock.add_exception(
-            httpx.ConnectError("Connection refused"),
-            url="http://localhost:8080/api/v1/workflows/wf-123/cancel",
-        )
-
-        with (
-            KruxiaFlow(
-                api_url="http://localhost:8080",
-                api_token="token",
-            ) as client,
-            pytest.raises(KruxiaFlowError, match="Request failed"),
-        ):
-            client.cancel_workflow("wf-123")
+    def test_unsupported_is_a_kruxiaflow_error(self):
+        assert issubclass(UnsupportedOperationError, KruxiaFlowError)
+        assert not issubclass(UnsupportedOperationError, WorkflowNotFoundError)
 
 
 # ============================================================================
@@ -917,78 +857,16 @@ class TestAsyncKruxiaFlowGetWorkflow:
 
 @pytest.mark.usefixtures("clean_env")
 class TestAsyncKruxiaFlowCancelWorkflow:
-    """Test AsyncKruxiaFlow cancel_workflow method."""
+    """Async cancel_workflow: the server has no cancel operation yet."""
 
     @pytest.mark.asyncio
-    async def test_cancel_workflow_success(self, httpx_mock: HTTPXMock):
-        httpx_mock.add_response(
-            method="POST",
-            url="http://localhost:8080/api/v1/workflows/wf-123/cancel",
-            status_code=200,
-        )
-
+    async def test_cancel_workflow_raises_without_a_request(
+        self, httpx_mock: HTTPXMock
+    ):
         async with AsyncKruxiaFlow(
             api_url="http://localhost:8080",
             api_token="token",
         ) as client:
-            await client.cancel_workflow("wf-123")  # Should not raise
-
-    @pytest.mark.asyncio
-    async def test_cancel_workflow_not_found(self, httpx_mock: HTTPXMock):
-        httpx_mock.add_response(
-            method="POST",
-            url="http://localhost:8080/api/v1/workflows/nonexistent/cancel",
-            status_code=404,
-        )
-
-        async with AsyncKruxiaFlow(
-            api_url="http://localhost:8080",
-            api_token="token",
-        ) as client:
-            with pytest.raises(WorkflowNotFoundError):
-                await client.cancel_workflow("nonexistent")
-
-    @pytest.mark.asyncio
-    async def test_cancel_workflow_auth_error(self, httpx_mock: HTTPXMock):
-        httpx_mock.add_response(
-            method="POST",
-            url="http://localhost:8080/api/v1/workflows/wf-123/cancel",
-            status_code=401,
-        )
-
-        async with AsyncKruxiaFlow(
-            api_url="http://localhost:8080",
-            api_token="token",
-        ) as client:
-            with pytest.raises(AuthenticationError):
+            with pytest.raises(UnsupportedOperationError, match="no cancel operation"):
                 await client.cancel_workflow("wf-123")
-
-    @pytest.mark.asyncio
-    async def test_cancel_workflow_server_error(self, httpx_mock: HTTPXMock):
-        httpx_mock.add_response(
-            method="POST",
-            url="http://localhost:8080/api/v1/workflows/wf-123/cancel",
-            status_code=500,
-            text="Internal server error",
-        )
-
-        async with AsyncKruxiaFlow(
-            api_url="http://localhost:8080",
-            api_token="token",
-        ) as client:
-            with pytest.raises(KruxiaFlowError, match="Failed to cancel workflow"):
-                await client.cancel_workflow("wf-123")
-
-    @pytest.mark.asyncio
-    async def test_cancel_workflow_network_error(self, httpx_mock: HTTPXMock):
-        httpx_mock.add_exception(
-            httpx.ConnectError("Connection refused"),
-            url="http://localhost:8080/api/v1/workflows/wf-123/cancel",
-        )
-
-        async with AsyncKruxiaFlow(
-            api_url="http://localhost:8080",
-            api_token="token",
-        ) as client:
-            with pytest.raises(KruxiaFlowError, match="Request failed"):
-                await client.cancel_workflow("wf-123")
+        assert httpx_mock.get_requests() == []
