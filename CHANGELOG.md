@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The API clients work with a `kruxiaflow serve --insecure-dev` server** (#3).
+  A token is now optional: with no `api_token` and no `KRUXIAFLOW_TOKEN`, the
+  clients send no `Authorization` header instead of raising `ValueError`. If a
+  server then answers 401, the `AuthenticationError` says no token was set. A
+  `"${VAR}"` token whose variable is unset still raises `ValueError`.
+- **Docs name the right token variable** (#3). `docs/quickstart.md` and
+  `docs/workflow-definitions.md` said `KRUXIAFLOW_API_TOKEN`; the client reads
+  `KRUXIAFLOW_TOKEN`.
+
 ### Changed
 
 - Package version is now derived from the git tag via `hatch-vcs`;

@@ -88,6 +88,10 @@ instance = client.start_workflow(
 print(f"Started: {instance['workflow_id']}")
 ```
 
+The client sends the token from `api_token` or `KRUXIAFLOW_TOKEN`. With neither, it
+sends no `Authorization` header, as a server started with
+`kruxiaflow serve --insecure-dev` expects.
+
 ### Write Python Activities with ScriptActivity
 
 Use `ScriptActivity` to write activities as Python functions that run on the py-std worker:

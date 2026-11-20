@@ -24,6 +24,38 @@ class WorkflowNotFoundError(KruxiaFlowError):
     """Workflow not found."""
 
 
+_NO_TOKEN_MESSAGE = (
+    "Authentication failed: no API token was set. Pass api_token or set the "
+    "KRUXIAFLOW_TOKEN environment variable."
+)
+
+
+def _resolve_token(api_token: str | None) -> str | None:
+    """Return the bearer token to send, or None to send no Authorization header.
+
+    A ``"${VAR}"`` reference is replaced by that variable's value; if the
+    variable is unset, raise ``ValueError``, since a token was clearly intended.
+    """
+    token = api_token or os.environ.get("KRUXIAFLOW_TOKEN", "")
+    if token.startswith("${") and token.endswith("}"):
+        env_var = token[2:-1]
+        token = os.environ.get(env_var, "")
+        if not token:
+            raise ValueError(f"Environment variable {env_var} is not set")
+    return token or None
+
+
+def _raise_no_token(response: httpx.Response) -> None:
+    """Response hook for a client with no token: explain a 401."""
+    if response.status_code == 401:
+        raise AuthenticationError(_NO_TOKEN_MESSAGE)
+
+
+async def _araise_no_token(response: httpx.Response) -> None:
+    """Async response hook for a client with no token: explain a 401."""
+    _raise_no_token(response)
+
+
 class KruxiaFlow:
     """API client for Kruxia Flow server.
 
@@ -55,36 +87,35 @@ class KruxiaFlow:
 
         Args:
             api_url: Base URL for the API server (default: KRUXIAFLOW_API_URL env var)
-            api_token: Bearer token for authentication (default: KRUXIAFLOW_TOKEN env var)
+            api_token: Bearer token for authentication (default: KRUXIAFLOW_TOKEN
+                env var). Optional: with no token, no Authorization header is
+                sent, as for a server started with ``kruxiaflow serve
+                --insecure-dev``. A ``"${VAR}"`` value is read from that
+                environment variable.
             timeout: Request timeout in seconds (default: 30.0)
 
         Raises:
-            ValueError: If api_url or api_token is not provided and not in environment
+            ValueError: If api_url is not provided and not in environment, or
+                api_token is a ``"${VAR}"`` reference to an unset variable
         """
         self._api_url = (api_url or os.environ.get("KRUXIAFLOW_API_URL", "")).rstrip(
             "/"
         )
-        self._api_token = api_token or os.environ.get("KRUXIAFLOW_TOKEN", "")
-
         if not self._api_url:
             raise ValueError(
                 "api_url is required. Pass it directly or set KRUXIAFLOW_API_URL environment variable."
             )
-        if not self._api_token:
-            raise ValueError(
-                "api_token is required. Pass it directly or set KRUXIAFLOW_TOKEN environment variable."
-            )
+        self._api_token = _resolve_token(api_token)
 
-        # Resolve token if it's an env var reference
-        if self._api_token.startswith("${") and self._api_token.endswith("}"):
-            env_var = self._api_token[2:-1]
-            self._api_token = os.environ.get(env_var, "")
-            if not self._api_token:
-                raise ValueError(f"Environment variable {env_var} is not set")
-
+        # No token: send no Authorization header, and explain a 401 if one comes.
         self._client = httpx.Client(
             base_url=self._api_url,
-            headers={"Authorization": f"Bearer {self._api_token}"},
+            headers=(
+                {"Authorization": f"Bearer {self._api_token}"}
+                if self._api_token
+                else None
+            ),
+            event_hooks=None if self._api_token else {"response": [_raise_no_token]},
             timeout=timeout,
         )
 
@@ -320,33 +351,35 @@ class AsyncKruxiaFlow:
 
         Args:
             api_url: Base URL for the API server (default: KRUXIAFLOW_API_URL env var)
-            api_token: Bearer token for authentication (default: KRUXIAFLOW_TOKEN env var)
+            api_token: Bearer token for authentication (default: KRUXIAFLOW_TOKEN
+                env var). Optional: with no token, no Authorization header is
+                sent, as for a server started with ``kruxiaflow serve
+                --insecure-dev``. A ``"${VAR}"`` value is read from that
+                environment variable.
             timeout: Request timeout in seconds (default: 30.0)
+
+        Raises:
+            ValueError: If api_url is not provided and not in environment, or
+                api_token is a ``"${VAR}"`` reference to an unset variable
         """
         self._api_url = (api_url or os.environ.get("KRUXIAFLOW_API_URL", "")).rstrip(
             "/"
         )
-        self._api_token = api_token or os.environ.get("KRUXIAFLOW_TOKEN", "")
-
         if not self._api_url:
             raise ValueError(
                 "api_url is required. Pass it directly or set KRUXIAFLOW_API_URL environment variable."
             )
-        if not self._api_token:
-            raise ValueError(
-                "api_token is required. Pass it directly or set KRUXIAFLOW_TOKEN environment variable."
-            )
+        self._api_token = _resolve_token(api_token)
 
-        # Resolve token if it's an env var reference
-        if self._api_token.startswith("${") and self._api_token.endswith("}"):
-            env_var = self._api_token[2:-1]
-            self._api_token = os.environ.get(env_var, "")
-            if not self._api_token:
-                raise ValueError(f"Environment variable {env_var} is not set")
-
+        # No token: send no Authorization header, and explain a 401 if one comes.
         self._client = httpx.AsyncClient(
             base_url=self._api_url,
-            headers={"Authorization": f"Bearer {self._api_token}"},
+            headers=(
+                {"Authorization": f"Bearer {self._api_token}"}
+                if self._api_token
+                else None
+            ),
+            event_hooks=None if self._api_token else {"response": [_araise_no_token]},
             timeout=timeout,
         )
 

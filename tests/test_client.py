@@ -88,9 +88,45 @@ class TestKruxiaFlowInit:
         with pytest.raises(ValueError, match="api_url is required"):
             KruxiaFlow(api_token="token")
 
-    def test_init_raises_without_api_token(self):
-        with pytest.raises(ValueError, match="api_token is required"):
-            KruxiaFlow(api_url="http://localhost:8080")
+    def test_init_without_token_sends_no_auth_header(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123",
+            json={"workflow_id": "wf-123"},
+        )
+
+        with KruxiaFlow(api_url="http://localhost:8080") as client:
+            assert client._api_token is None
+            client.get_workflow("wf-123")
+
+        assert "Authorization" not in httpx_mock.get_request().headers
+
+    def test_init_with_token_sends_auth_header(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123",
+            json={"workflow_id": "wf-123"},
+        )
+
+        with KruxiaFlow(api_url="http://localhost:8080", api_token="tok") as client:
+            client.get_workflow("wf-123")
+
+        assert httpx_mock.get_request().headers["Authorization"] == "Bearer tok"
+
+    def test_auth_error_without_token_says_no_token_was_set(
+        self, httpx_mock: HTTPXMock
+    ):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123",
+            status_code=401,
+        )
+
+        with (
+            KruxiaFlow(api_url="http://localhost:8080") as client,
+            pytest.raises(AuthenticationError, match="no API token was set"),
+        ):
+            client.get_workflow("wf-123")
 
     def test_init_resolves_env_var_token(self):
         os.environ["MY_TOKEN"] = "resolved_token"
@@ -727,9 +763,48 @@ class TestAsyncKruxiaFlowInit:
         with pytest.raises(ValueError, match="api_url is required"):
             AsyncKruxiaFlow(api_token="token")
 
-    def test_init_raises_without_api_token(self):
-        with pytest.raises(ValueError, match="api_token is required"):
-            AsyncKruxiaFlow(api_url="http://localhost:8080")
+    @pytest.mark.asyncio
+    async def test_init_without_token_sends_no_auth_header(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123",
+            json={"workflow_id": "wf-123"},
+        )
+
+        async with AsyncKruxiaFlow(api_url="http://localhost:8080") as client:
+            assert client._api_token is None
+            await client.get_workflow("wf-123")
+
+        assert "Authorization" not in httpx_mock.get_request().headers
+
+    @pytest.mark.asyncio
+    async def test_init_with_token_sends_auth_header(self, httpx_mock: HTTPXMock):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123",
+            json={"workflow_id": "wf-123"},
+        )
+
+        async with AsyncKruxiaFlow(
+            api_url="http://localhost:8080", api_token="tok"
+        ) as client:
+            await client.get_workflow("wf-123")
+
+        assert httpx_mock.get_request().headers["Authorization"] == "Bearer tok"
+
+    @pytest.mark.asyncio
+    async def test_auth_error_without_token_says_no_token_was_set(
+        self, httpx_mock: HTTPXMock
+    ):
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123",
+            status_code=401,
+        )
+
+        async with AsyncKruxiaFlow(api_url="http://localhost:8080") as client:
+            with pytest.raises(AuthenticationError, match="no API token was set"):
+                await client.get_workflow("wf-123")
 
     @pytest.mark.asyncio
     async def test_async_context_manager(self):

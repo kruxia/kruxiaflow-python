@@ -114,7 +114,7 @@ This prints the compiled YAML workflow definition.
 # Deploy to a running Kruxia Flow server
 client = KruxiaFlow(
     api_url="http://localhost:8080",
-    api_token="${KRUXIAFLOW_TOKEN}",  # Or set KRUXIAFLOW_API_TOKEN env var
+    api_token="${KRUXIAFLOW_TOKEN}",  # Or set KRUXIAFLOW_TOKEN env var
 )
 
 # Deploy the workflow definition
@@ -128,6 +128,10 @@ instance = client.start_workflow(
 )
 print(f"Started workflow: {instance['workflow_id']}")
 ```
+
+The token is optional. With no `api_token` and no `KRUXIAFLOW_TOKEN`, the client
+sends no `Authorization` header, which is what a development server started with
+`kruxiaflow serve --insecure-dev` expects.
 
 ## Key Concepts
 

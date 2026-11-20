@@ -348,7 +348,7 @@ from kruxiaflow import KruxiaFlow
 
 client = KruxiaFlow(
     api_url="http://localhost:8080",
-    api_token="your_token",  # Or set KRUXIAFLOW_API_TOKEN env var
+    api_token="your_token",  # Or set KRUXIAFLOW_TOKEN; omit for --insecure-dev
 )
 
 # Deploy workflow
