@@ -96,10 +96,22 @@ class TestKruxiaFlowInit:
         )
 
         with KruxiaFlow(api_url="http://localhost:8080") as client:
-            assert client._api_token is None
             client.get_workflow("wf-123")
 
         assert "Authorization" not in httpx_mock.get_request().headers
+
+    def test_env_token_sends_auth_header(self, httpx_mock: HTTPXMock):
+        os.environ["KRUXIAFLOW_TOKEN"] = "env_tok"
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123",
+            json={"workflow_id": "wf-123"},
+        )
+
+        with KruxiaFlow(api_url="http://localhost:8080") as client:
+            client.get_workflow("wf-123")
+
+        assert httpx_mock.get_request().headers["Authorization"] == "Bearer env_tok"
 
     def test_init_with_token_sends_auth_header(self, httpx_mock: HTTPXMock):
         httpx_mock.add_response(
@@ -772,10 +784,23 @@ class TestAsyncKruxiaFlowInit:
         )
 
         async with AsyncKruxiaFlow(api_url="http://localhost:8080") as client:
-            assert client._api_token is None
             await client.get_workflow("wf-123")
 
         assert "Authorization" not in httpx_mock.get_request().headers
+
+    @pytest.mark.asyncio
+    async def test_env_token_sends_auth_header(self, httpx_mock: HTTPXMock):
+        os.environ["KRUXIAFLOW_TOKEN"] = "env_tok"
+        httpx_mock.add_response(
+            method="GET",
+            url="http://localhost:8080/api/v1/workflows/wf-123",
+            json={"workflow_id": "wf-123"},
+        )
+
+        async with AsyncKruxiaFlow(api_url="http://localhost:8080") as client:
+            await client.get_workflow("wf-123")
+
+        assert httpx_mock.get_request().headers["Authorization"] == "Bearer env_tok"
 
     @pytest.mark.asyncio
     async def test_init_with_token_sends_auth_header(self, httpx_mock: HTTPXMock):

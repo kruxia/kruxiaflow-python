@@ -112,10 +112,9 @@ This prints the compiled YAML workflow definition.
 
 ```python
 # Deploy to a running Kruxia Flow server
-client = KruxiaFlow(
-    api_url="http://localhost:8080",
-    api_token="${KRUXIAFLOW_TOKEN}",  # Or set KRUXIAFLOW_TOKEN env var
-)
+# The token comes from KRUXIAFLOW_TOKEN (or pass api_token=...); without
+# either, as for an --insecure-dev server, the client sends none
+client = KruxiaFlow(api_url="http://localhost:8080")
 
 # Deploy the workflow definition
 result = client.deploy(workflow)
